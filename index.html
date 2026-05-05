@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mv26">
-<meta name="theme-color" content="#faf6ee">
+<meta name="theme-color" content="#050506">
 <title>Mv26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +32,7 @@
   --pad: 18px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+.hidden { display: none !important; }
 html, body { height: 100%; overflow: hidden; }
 body { background: var(--bg); color: var(--text); font-family: 'Manrope', sans-serif; display: flex; flex-direction: column; }
 
@@ -2434,6 +2435,32 @@ body {
   .ios-system-timer .timer-controls { grid-template-columns: 1fr 1fr; }
 }
 
+
+/* Fixed active timer: makes the rest timer impossible to miss during a workout */
+.ios-system-timer.active,
+.ios-system-timer.paused,
+.ios-system-timer.complete {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  width: min(430px, calc(100vw - 28px));
+  z-index: 650;
+  transform: translateX(-50%);
+  box-shadow:
+    0 24px 60px rgba(46,38,29,.24),
+    inset 0 1px 0 rgba(255,255,255,.72);
+}
+.ios-system-timer.active::before,
+.ios-system-timer.paused::before,
+.ios-system-timer.complete::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.55) inset;
+}
+
 </style>
 </head>
 <body>
@@ -2582,7 +2609,7 @@ body {
     </div>
 
     <!-- Date Nav -->
-    <div class="date-nav">
+    <div class="date-nav habit-date-nav">
       <div class="date-nav-arrow" id="habit-prev" onclick="changeHabitDate(-1)">‹</div>
       <div class="date-nav-center">
         <div class="date-nav-day" id="habit-date-day"></div>
@@ -2591,6 +2618,48 @@ body {
       </div>
       <div class="date-nav-arrow" id="habit-next" onclick="changeHabitDate(1)">›</div>
     </div>
+
+    <section class="habits-dashboard" aria-label="Habits dashboard">
+      <div class="dash-hero">
+        <div class="dash-hero-top">
+          <div>
+            <div class="dash-kicker">Daily dashboard</div>
+            <div class="dash-title">Build the streak.</div>
+          </div>
+          <div class="dash-live-dot" aria-hidden="true"></div>
+        </div>
+        <div class="dash-odometer-row">
+          <div class="dash-odometer" aria-label="Daily completion percent">
+            <span id="dash-pct-tens">0</span><span id="dash-pct-ones">0</span><span class="dash-percent">%</span>
+          </div>
+          <div class="dash-ring" id="dash-ring" style="--dash-pct:0">
+            <div class="dash-ring-inner">
+              <span id="dash-done-count">0</span>
+              <small>/<span id="dash-total-count">0</span></small>
+            </div>
+          </div>
+        </div>
+        <div class="dash-progress-track"><div class="dash-progress-fill" id="dash-progress-fill" style="width:0%"></div></div>
+        <div class="dash-subline" id="dash-subline">Start with one check. Momentum follows.</div>
+      </div>
+
+      <div class="dash-stat-grid">
+        <div class="dash-stat-card">
+          <span class="dash-stat-label">Streak</span>
+          <strong id="dash-streak">0</strong>
+          <span class="dash-stat-note">days</span>
+        </div>
+        <div class="dash-stat-card">
+          <span class="dash-stat-label">Remaining</span>
+          <strong id="dash-remaining">0</strong>
+          <span class="dash-stat-note">habits</span>
+        </div>
+        <div class="dash-stat-card dash-wide">
+          <span class="dash-stat-label">Week signal</span>
+          <div class="dash-week-bars" id="dash-week-bars"></div>
+        </div>
+      </div>
+    </section>
 
     <div class="all-done-banner" id="all-done-banner">
       <div class="all-done-title">🌿 All done today!</div>
@@ -3030,11 +3099,12 @@ function renderHabits() {
     }).join('');
 
     const card = document.createElement('div');
-    card.className = 'habit-card' + (checked ? ' done' : '');
+    card.className = 'habit-card dashboard-habit-card' + (checked ? ' done' : '');
     card.style.setProperty('--color', habit.color);
     card.style.setProperty('--habit-icon', habitIconMask(habit.id));
     card.style.animationDelay = `${idx*0.04}s`;
     card.innerHTML = `
+      <div class="habit-mark" aria-hidden="true"></div>
       <div class="habit-emoji">${habit.emoji}</div>
       <div class="habit-info">
         <div class="habit-name">${habit.name}</div>
@@ -3074,17 +3144,23 @@ function changeSession(dir) {
 
 function updateSessionLabel() { updateWorkoutDateNav(); }
 
+function hideProgramPrompt() {
+  document.getElementById('modal-program')?.classList.add('hidden');
+  document.getElementById('empty-state')?.classList.add('hidden');
+}
+
 function loadProgram() {
   exercises = PRESET_PROGRAM.map(e=>({...e}));
   lSet('mv26_exercises', exercises);
   lSet('mv26_program_asked', true);
-  document.getElementById('modal-program').classList.add('hidden');
+  hideProgramPrompt();
   renderExercises();
-  showToast('90-day program loaded 🔥');
+  hideProgramPrompt();
+  showToast('90-day program loaded');
 }
 function skipProgram() {
   lSet('mv26_program_asked', true);
-  document.getElementById('modal-program').classList.add('hidden');
+  hideProgramPrompt();
 }
 
 function openAddExModal() {
@@ -3133,8 +3209,8 @@ function renderExercises() {
   const container = document.getElementById('exercises-list');
   const empty = document.getElementById('empty-state');
   container.innerHTML = '';
-  if(!exercises.length) { empty.classList.remove('hidden'); return; }
-  empty.classList.add('hidden');
+  if(!exercises.length) { empty?.classList.remove('hidden'); return; }
+  empty?.classList.add('hidden');
 
   exercises.forEach((ex, idx) => {
     const card = document.createElement('div');
@@ -3191,6 +3267,12 @@ function toggleSetDone(exId, s) {
   workoutData[exId][`set${s}`].done=!cur;
   document.getElementById(`done-${exId}-${s}`).classList.toggle('done',!cur);
   document.getElementById(`row-${exId}-${s}`).classList.toggle('completed',!cur);
+
+  // Auto-start the iOS-style rest timer when a set is completed.
+  // This is the key workout flow: log set -> rest starts immediately.
+  if(!cur && typeof startRestTimer === 'function') {
+    startRestTimer(restDuration || 90, nextSetFor(exId, s));
+  }
 }
 
 async function saveWorkout() {
@@ -3614,56 +3696,1466 @@ document.getElementById('w-weight').addEventListener('keydown', e => { if(e.key=
 //           DAILY QUOTE
 // ════════════════════════════════════
 const QUOTES = [
-  {text:"You do not rise to the level of your goals. You fall to the level of your systems.", author:"James Clear, Atomic Habits"},
-  {text:"Every action you take is a vote for the type of person you wish to become.", author:"James Clear, Atomic Habits"},
-  {text:"Success is the product of daily habits — not once-in-a-lifetime transformations.", author:"James Clear"},
-  {text:"Be 1% better every day. That's all it takes. Compounded over a year, you'll be 37 times better.", author:"Atomic Habits"},
-  {text:"The most powerful thing you can do is make the next right choice. Just one. Right now.", author:"Mv26"},
-  {text:"You don't have to be great to start. But you have to start to be great.", author:"Zig Ziglar"},
-  {text:"Motivation gets you going. Habit keeps you growing.", author:"John C. Maxwell"},
-  {text:"The chains of habit are too light to be felt until they are too heavy to be broken.", author:"Warren Buffett"},
-  {text:"Small disciplines repeated with consistency every day lead to great achievements.", author:"John C. Maxwell"},
-  {text:"It's not about having time. It's about making time. If it matters, you schedule it.", author:"Mv26"},
-  {text:"Your life does not get better by chance. It gets better by change.", author:"Jim Rohn"},
-  {text:"We are what we repeatedly do. Excellence, then, is not an act but a habit.", author:"Aristotle"},
-  {text:"The secret of your future is hidden in your daily routine.", author:"Mike Murdock"},
-  {text:"Don't count the days. Make the days count.", author:"Muhammad Ali"},
-  {text:"A year from now you'll wish you had started today.", author:"Karen Lamb"},
-  {text:"The groundwork for all happiness is good health and good habits.", author:"Leigh Hunt"},
-  {text:"One day or day one. You decide.", author:"Paulo Coelho"},
-  {text:"Discipline is choosing between what you want now and what you want most.", author:"Abraham Lincoln"},
-  {text:"Your body hears everything your mind says. Start talking to it like someone you love.", author:"Mv26"},
-  {text:"Progress is not achieved by luck or accident, but by working on yourself daily.", author:"Epictetus"},
-  {text:"Show up. Every. Single. Day. That's the whole strategy.", author:"Mv26"},
-  {text:"The man who moves a mountain begins by carrying away small stones.", author:"Confucius"},
-  {text:"Don't wish for it. Work for it. Then wake up tomorrow and work for it again.", author:"Mv26"},
-  {text:"The first step doesn't take you where you want to go. But it takes you away from where you are.", author:"Mv26"},
-  {text:"Clarity about what matters provides clarity about what does not.", author:"Cal Newport"},
-  {text:"Take care of your body. It's the only place you have to live.", author:"Jim Rohn"},
-  {text:"Inch by inch, life's a cinch. Yard by yard, life is hard.", author:"John Bytheway"},
-  {text:"You'll never always be motivated, so you must learn to be disciplined.", author:"Mv26"},
-  {text:"The difference between who you are and who you want to be is what you do today.", author:"Mv26"},
-  {text:"Habit is a cable; we weave a thread of it each day, and it becomes so strong we cannot break it.", author:"Horace Mann"},
-  {text:"Don't wait for inspiration. Become it.", author:"Mv26"},
-  {text:"The quality of your life is determined by the quality of your daily decisions.", author:"Mv26"},
-  {text:"What you do every day matters more than what you do once in a while.", author:"Gretchen Rubin"},
-  {text:"You are either building or breaking your habits right now. There is no neutral.", author:"Mv26"},
-  {text:"The goal is not to be perfect. The goal is to be better than you were yesterday.", author:"Mv26"},
-  {text:"Hard choices, easy life. Easy choices, hard life.", author:"Jerzy Gregorek"},
-  {text:"Invest in yourself. Your career and goals need a healthy body and sharp mind.", author:"Mv26"},
-  {text:"Habits are the compound interest of self-improvement.", author:"James Clear"},
-  {text:"Nothing in nature blooms all year. Be patient with yourself.", author:"Mv26"},
-  {text:"The only bad workout is the one that didn't happen.", author:"Mv26"},
-  {text:"Eat well, move daily, sleep deeply. Everything else is a footnote.", author:"Mv26"},
-  {text:"Commitment means staying loyal to what you said you'd do, long after the mood has passed.", author:"Mv26"},
-  {text:"Make it so easy you can't say no. Make it so obvious you can't forget.", author:"James Clear"},
-  {text:"Don't break the chain. Just show up.", author:"Jerry Seinfeld"},
-  {text:"Identity precedes action. Decide who you are. Then act like it.", author:"Mv26"},
-  {text:"No one is coming to save you. This morning is yours. Use it.", author:"Mv26"},
-  {text:"A small daily task, if it be really daily, will beat the labors of a spasmodic Hercules.", author:"Anthony Trollope"},
-  {text:"Your future self is watching you right now through your memories. Make it proud.", author:"Mv26"},
-  {text:"Sleep is not a luxury. It's the foundation everything else is built on.", author:"Mv26"},
-  {text:"The best time to plant a tree was 20 years ago. The second best time is today.", author:"Chinese Proverb"},
+  {
+    "text": "One quiet step counts more than a perfect plan.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan today.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "One quiet step counts more than a perfect plan even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Small progress is still progress even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your next rep is a vote for your future self even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Consistency turns ordinary days into proof even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal today.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "The work gets lighter when showing up gets normal even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Build the identity before you need the motivation even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices today.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "A better life is assembled in small choices even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Resilience begins with doing the next simple thing even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated today.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "One percent better is not small when repeated even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Discipline is just self-respect with a calendar even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Let today be evidence, not a debate even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes today.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "The strongest version of you is built in unglamorous minutes even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Momentum starts before confidence arrives even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice today.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "You do not need a perfect day to make a strong choice even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter today.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "The habit matters because you matter even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Tiny wins teach your brain to trust you even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Keep the promise small enough to keep even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity with less noise.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity one breath at a time.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity even if it is imperfect.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity and let that be enough.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity because repetition compounds.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity because the future is listening.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity because small things become systems.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity and keep going.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity then repeat tomorrow.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity without needing applause.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity in the next five minutes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity while staying kind to yourself.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity and make it visible.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity because this is how momentum starts.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity because you are training trust.",
+    "author": "MV26"
+  },
+  {
+    "text": "Progress likes repetition more than intensity even when nobody sees it.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your baseline rises every time you return.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your baseline rises every time you return today.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your baseline rises every time you return right now.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your baseline rises every time you return before the mood changes.",
+    "author": "MV26"
+  },
+  {
+    "text": "Your baseline rises every time you return with less noise.",
+    "author": "MV26"
+  }
 ];
 
 const QUOTE_EMOJIS = ['🌿','🌱','🍃','✦','✓','☀️','🌾','○','🪴','🏔️'];
@@ -3673,11 +5165,14 @@ function showDailyQuote() {
   const lastSeen = lGet('mv26_quote_seen');
   if(lastSeen === today) return; // already shown today
 
-  // Pick quote based on day-of-year for variety (not random, same quote all day)
-  const start = new Date(new Date().getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((new Date() - start) / 86400000);
-  const quote = QUOTES[dayOfYear % QUOTES.length];
-  const emoji = QUOTE_EMOJIS[dayOfYear % QUOTE_EMOJIS.length];
+  // Pick a random quote each day, then keep that quote stable for the day.
+  let quotePick = lGet('mv26_quote_pick');
+  if(!quotePick || quotePick.date !== today) {
+    quotePick = { date: today, index: Math.floor(Math.random() * QUOTES.length) };
+    lSet('mv26_quote_pick', quotePick);
+  }
+  const quote = QUOTES[quotePick.index % QUOTES.length];
+  const emoji = QUOTE_EMOJIS[quotePick.index % QUOTE_EMOJIS.length];
 
   const overlay = document.getElementById('quote-overlay');
   document.getElementById('quote-text').textContent = `"${quote.text}"`;
@@ -3764,23 +5259,54 @@ function setRestDuration(seconds) {
 }
 
 function startRestTimer(seconds = restDuration, label = nextSetLabel) {
-  if(seconds && seconds !== restDuration) restDuration = seconds;
-  if(!restRemaining || restRemaining <= 0 || restRemaining === restDuration) restRemaining = restDuration;
+  // Always begin a fresh countdown when Start is tapped or a set is completed.
+  // Resume is handled separately by pauseRestTimer().
+  restDuration = Number(seconds) || restDuration || 90;
+  restRemaining = restDuration;
   nextSetLabel = label || 'Next set';
+
   if(restInterval) clearInterval(restInterval);
+  restInterval = null;
   restRunning = true;
   updateRestTimerUI();
 
   restInterval = setInterval(() => {
-    restRemaining -= 1;
+    restRemaining = Math.max(0, restRemaining - 1);
+
     if(restRemaining <= 0) {
-      restRemaining = 0;
       clearInterval(restInterval);
       restInterval = null;
       restRunning = false;
-      if(navigator.vibrate) navigator.vibrate([60, 50, 60]);
+      updateRestTimerUI();
+      if(navigator.vibrate) navigator.vibrate([80, 60, 80]);
       showToast('Rest complete — next set');
+      return;
     }
+
+    updateRestTimerUI();
+  }, 1000);
+}
+
+function resumeRestTimer() {
+  if(restRemaining <= 0) return;
+  if(restInterval) clearInterval(restInterval);
+  restInterval = null;
+  restRunning = true;
+  updateRestTimerUI();
+
+  restInterval = setInterval(() => {
+    restRemaining = Math.max(0, restRemaining - 1);
+
+    if(restRemaining <= 0) {
+      clearInterval(restInterval);
+      restInterval = null;
+      restRunning = false;
+      updateRestTimerUI();
+      if(navigator.vibrate) navigator.vibrate([80, 60, 80]);
+      showToast('Rest complete — next set');
+      return;
+    }
+
     updateRestTimerUI();
   }, 1000);
 }
@@ -3791,7 +5317,7 @@ function pauseRestTimer() {
     restInterval = null;
     restRunning = false;
   } else if(restRemaining > 0 && restRemaining < restDuration) {
-    startRestTimer(restRemaining, nextSetLabel);
+    resumeRestTimer();
     return;
   }
   updateRestTimerUI();
@@ -3845,8 +5371,8 @@ function renderExercises() {
   const container = document.getElementById('exercises-list');
   const empty = document.getElementById('empty-state');
   container.innerHTML = '';
-  if(!exercises.length) { empty.classList.remove('hidden'); return; }
-  empty.classList.add('hidden');
+  if(!exercises.length) { empty?.classList.remove('hidden'); return; }
+  empty?.classList.add('hidden');
 
   exercises.forEach((ex, idx) => {
     const totals = exerciseTotals(ex);
@@ -4260,5 +5786,292 @@ renderGraphicMark = function odometerRenderGraphicMark(habit) {
 init();
 setTimeout(updateRestTimerUI, 500);
 </script>
+
+<style>
+/* === BLACK MODERN HABITS DASHBOARD PASS === */
+:root {
+  --bg: #050506 !important;
+  --surface: rgba(18,18,20,0.86) !important;
+  --surface2: rgba(255,255,255,0.055) !important;
+  --border: rgba(255,255,255,0.085) !important;
+  --text: #F5F5F7 !important;
+  --muted: #9B9BA2 !important;
+  --muted2: #5F6068 !important;
+  --green: #D6FF4F !important;
+  --green-light: rgba(214,255,79,0.14) !important;
+  --pink: #FF6B6B !important;
+  --tan: #B89C70 !important;
+  --brown: #2A2A2F !important;
+  --glass-shadow: 0 28px 80px rgba(0,0,0,0.66) !important;
+  --glass-shadow-soft: 0 16px 44px rgba(0,0,0,0.42) !important;
+  --glass-border: rgba(255,255,255,0.09) !important;
+}
+html, body { background: #050506 !important; }
+body {
+  color: var(--text) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Instrument Sans', system-ui, sans-serif !important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(214,255,79,0.12), transparent 26%),
+    radial-gradient(circle at 10% 18%, rgba(255,255,255,0.06), transparent 24%),
+    linear-gradient(180deg, #111114 0%, #050506 48%, #020203 100%) !important;
+}
+.phone-frame {
+  background: #050506 !important;
+  border-color: #151519 !important;
+  box-shadow: 0 46px 120px rgba(0,0,0,.75), inset 0 0 0 1px rgba(255,255,255,.05) !important;
+}
+.phone-frame::after { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset 0 18px 40px rgba(255,255,255,.03) !important; }
+.phone-status, .app-title, .habit-name, .date-nav-day, .streak-pill .num { color: var(--text) !important; }
+.phone-speaker, .phone-camera, .phone-hardware { background: rgba(255,255,255,.16) !important; }
+.ambient-orb { opacity: .25 !important; filter: blur(46px) !important; }
+.orb-one { background: rgba(214,255,79,.18) !important; }
+.orb-two { background: rgba(255,255,255,.10) !important; }
+.app-views {
+  background:
+    radial-gradient(circle at 50% -8%, rgba(214,255,79,.105), transparent 28%),
+    radial-gradient(circle at 82% 10%, rgba(255,255,255,.055), transparent 24%),
+    linear-gradient(180deg, #101012 0%, #09090B 42%, #050506 100%) !important;
+}
+#view-habits .app-header {
+  position: sticky !important;
+  top: 0 !important;
+  background: linear-gradient(180deg, rgba(8,8,10,.94), rgba(8,8,10,.72)) !important;
+  border-bottom: 1px solid rgba(255,255,255,.055) !important;
+  backdrop-filter: blur(30px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.15) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.32) !important;
+  padding-bottom: 16px !important;
+}
+.app-header, .bottom-nav, .date-nav, .modal-card, .install-banner, .all-done-banner, .friend-log, .empty-state, .profile-section, .stat-card, .history-card, .exercise-card, .phase-tabs {
+  background: rgba(18,18,20,.78) !important;
+  border-color: rgba(255,255,255,.08) !important;
+  backdrop-filter: blur(28px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.2) !important;
+  box-shadow: 0 16px 42px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.045) !important;
+}
+.header-meta, .habit-meta, .date-nav-full, .progress-label, .section-label, .streak-pill, .nav-btn, .dash-stat-note { color: rgba(245,245,247,.55) !important; }
+.app-title span { color: var(--green) !important; }
+.user-dot, .progress-fill, .set-done-btn.done, .habit-toggle.on, .phase-tab.active, .btn-save, .btn-primary, .quote-dismiss {
+  background: linear-gradient(135deg, #D6FF4F, #8BAF28) !important;
+  color: #09090B !important;
+  box-shadow: 0 14px 36px rgba(214,255,79,.18) !important;
+}
+.pill-btn, .streak-pill, .date-nav-arrow, .field-input, .set-input, .btn-secondary {
+  background: rgba(255,255,255,.055) !important;
+  border-color: rgba(255,255,255,.08) !important;
+  color: var(--text) !important;
+}
+#view-habits .streak-row, #view-habits .progress-wrap { display: none !important; }
+.habit-date-nav { margin: 14px 18px 0 !important; border-radius: 22px !important; padding: 12px 14px !important; }
+.date-nav-today-badge {
+  background: rgba(214,255,79,.12) !important;
+  color: var(--green) !important;
+  border: 1px solid rgba(214,255,79,.20) !important;
+}
+.habits-dashboard { padding: 14px 18px 4px !important; }
+.dash-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 34px;
+  padding: 22px;
+  min-height: 268px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 80% 10%, rgba(214,255,79,.24), transparent 28%),
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.12), transparent 24%),
+    linear-gradient(145deg, rgba(31,31,35,.96), rgba(12,12,14,.94));
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 28px 80px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.dash-hero::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.16), transparent 34%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 16px);
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+  pointer-events: none;
+}
+.dash-hero-top, .dash-odometer-row, .dash-progress-track, .dash-subline { position: relative; z-index: 1; }
+.dash-hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.dash-kicker, .dash-stat-label { font-size: 11px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; color: rgba(245,245,247,.50); }
+.dash-title { margin-top: 8px; font-size: 28px; line-height: .98; font-weight: 760; letter-spacing: -.055em; }
+.dash-live-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 7px rgba(214,255,79,.12), 0 0 28px rgba(214,255,79,.5); }
+.dash-odometer-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 28px; }
+.dash-odometer { display: flex; align-items: flex-end; gap: 5px; font-variant-numeric: tabular-nums; }
+.dash-odometer span:not(.dash-percent) {
+  min-width: 54px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -.08em;
+  color: #F8F8F9;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.025)),
+    linear-gradient(180deg, #252529 0%, #131316 48%, #09090B 52%, #1B1B1F 100%);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -1px 0 rgba(0,0,0,.8), 0 16px 28px rgba(0,0,0,.32);
+  text-shadow: 0 1px 0 rgba(255,255,255,.08);
+}
+.dash-percent { margin-left: 3px; margin-bottom: 10px; font-size: 24px; font-weight: 760; color: var(--green); }
+.dash-ring {
+  --dash-pct: 0;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: conic-gradient(var(--green) calc(var(--dash-pct) * 1%), rgba(255,255,255,.08) 0);
+  box-shadow: 0 18px 38px rgba(0,0,0,.38), 0 0 34px rgba(214,255,79,.12);
+}
+.dash-ring-inner {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+  background: #0B0B0D;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.dash-ring-inner small { margin-top: -18px; font-size: 12px; color: rgba(245,245,247,.46); }
+.dash-progress-track { height: 9px; margin-top: 24px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.dash-progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #D6FF4F, #7D982E); box-shadow: 0 0 30px rgba(214,255,79,.34); transition: width .65s cubic-bezier(.16,1,.3,1); }
+.dash-subline { margin-top: 13px; font-size: 13px; font-weight: 600; color: rgba(245,245,247,.56); }
+.dash-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.dash-stat-card {
+  min-height: 104px;
+  padding: 16px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.035));
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 16px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.055);
+}
+.dash-stat-card strong { display: block; margin-top: 10px; font-size: 38px; line-height: .9; letter-spacing: -.06em; color: #fff; }
+.dash-wide { grid-column: 1 / -1; min-height: 92px; }
+.dash-week-bars { display: grid; grid-template-columns: repeat(7,1fr); gap: 7px; align-items: end; height: 42px; margin-top: 14px; }
+.dash-week-bar { border-radius: 8px; min-height: 7px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.055); overflow: hidden; }
+.dash-week-bar > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, #D6FF4F, #7D982E); opacity: .95; }
+#view-habits .section-label { padding: 22px 18px 10px !important; color: rgba(245,245,247,.48) !important; }
+#view-habits .habits-list { padding: 0 18px 20px !important; gap: 12px !important; }
+.dashboard-habit-card {
+  min-height: 96px !important;
+  padding: 16px !important;
+  gap: 14px !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(214,255,79,.075), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.032)) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.055) !important;
+  backdrop-filter: blur(24px) saturate(1.14) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.14) !important;
+}
+.dashboard-habit-card::before, .dashboard-habit-card::after { display: none !important; }
+.dashboard-habit-card.done {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(214,255,79,.16), transparent 42%),
+    linear-gradient(145deg, rgba(214,255,79,.095), rgba(255,255,255,.040)) !important;
+  border-color: rgba(214,255,79,.22) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.36), 0 0 34px rgba(214,255,79,.08), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+.habit-mark {
+  width: 52px; height: 52px; border-radius: 18px; flex: 0 0 auto;
+  background: linear-gradient(145deg, rgba(255,255,255,.10), rgba(255,255,255,.045));
+  border: 1px solid rgba(255,255,255,.08);
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 24px rgba(0,0,0,.24);
+}
+.habit-mark::before {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  background: rgba(245,245,247,.78);
+  -webkit-mask: var(--habit-icon) center / contain no-repeat;
+  mask: var(--habit-icon) center / contain no-repeat;
+}
+.dashboard-habit-card.done .habit-mark { background: linear-gradient(145deg, rgba(214,255,79,.24), rgba(214,255,79,.08)); border-color: rgba(214,255,79,.22); }
+.dashboard-habit-card.done .habit-mark::before { background: var(--green); }
+.habit-emoji { display: none !important; }
+.dashboard-habit-card .habit-name { font-size: 17px !important; font-weight: 680 !important; letter-spacing: -.025em !important; color: var(--text) !important; }
+.dashboard-habit-card.done .habit-name { color: rgba(245,245,247,.72) !important; text-decoration: none !important; }
+.dashboard-habit-card .habit-meta { margin-top: 4px !important; font-size: 12.5px !important; color: rgba(245,245,247,.48) !important; }
+.week-dots { margin-top: 10px !important; gap: 5px !important; }
+.dot { width: 7px !important; height: 7px !important; background: rgba(255,255,255,.10) !important; }
+.dot.filled { background: var(--green) !important; box-shadow: 0 0 0 3px rgba(214,255,79,.08) !important; }
+.dot.today { border: 1.5px solid var(--green) !important; background: transparent !important; }
+.check-circle { width: 34px !important; height: 34px !important; background: rgba(255,255,255,.045) !important; border: 1.5px solid rgba(255,255,255,.12) !important; }
+.dashboard-habit-card.done .check-circle { background: var(--green) !important; border-color: var(--green) !important; box-shadow: 0 10px 24px rgba(214,255,79,.18) !important; }
+.dashboard-habit-card.done .check-circle svg { stroke: #070708 !important; }
+.all-done-banner.show { margin: 12px 18px 0 !important; border-radius: 24px !important; background: rgba(214,255,79,.105) !important; border-color: rgba(214,255,79,.22) !important; }
+.all-done-title { color: var(--green) !important; }
+.all-done-sub { color: rgba(245,245,247,.58) !important; }
+.bottom-nav { background: rgba(10,10,12,.82) !important; border-top-color: rgba(255,255,255,.075) !important; }
+.nav-btn.active { color: var(--green) !important; }
+.toast { background: rgba(245,245,247,.92) !important; color: #050506 !important; }
+@media (max-width: 420px) {
+  .dash-hero { min-height: 254px; padding: 20px; }
+  .dash-odometer span:not(.dash-percent) { min-width: 48px; height: 70px; font-size: 48px; border-radius: 16px; }
+  .dash-ring { width: 92px; height: 92px; }
+  .dash-ring-inner { width: 68px; height: 68px; font-size: 25px; }
+}
+</style>
+
+<script>
+(function(){
+  const previousUpdateProgress = window.updateProgress;
+  window.updateProgress = function(){
+    if (typeof previousUpdateProgress === 'function') previousUpdateProgress();
+    try {
+      const viewingH = getHabitsForOffset(habitOffset);
+      const key = habitKey();
+      const done = viewingH.filter(h => !!(habitData[key]?.[h.id])).length;
+      const total = viewingH.length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      const tens = Math.floor(pct / 10);
+      const ones = pct % 10;
+      const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value; };
+      setText('dash-pct-tens', tens);
+      setText('dash-pct-ones', ones);
+      setText('dash-done-count', done);
+      setText('dash-total-count', total);
+      setText('dash-streak', getStreak());
+      setText('dash-remaining', Math.max(total - done, 0));
+      const ring = document.getElementById('dash-ring');
+      if (ring) ring.style.setProperty('--dash-pct', pct);
+      const fill = document.getElementById('dash-progress-fill');
+      if (fill) fill.style.width = pct + '%';
+      const sub = document.getElementById('dash-subline');
+      if (sub) {
+        sub.textContent = pct === 100 ? 'Perfect day. Lock it in.' :
+          pct >= 70 ? 'You are close. Finish the board.' :
+          pct >= 40 ? 'Momentum is building. Keep moving.' :
+          done > 0 ? 'Good start. Stack the next check.' :
+          'Start with one check. Momentum follows.';
+      }
+      const week = document.getElementById('dash-week-bars');
+      if (week) {
+        week.innerHTML = getLast7().map(dk => {
+          const d = new Date(dk + 'T12:00:00');
+          const dow = d.getDay();
+          const dayHabits = HABITS.filter(h => h.days === 'daily' || h.days.includes(dow));
+          const dayDone = dayHabits.filter(h => habitData[dk]?.[h.id]).length;
+          const dayPct = dayHabits.length ? Math.max(8, Math.round(dayDone / dayHabits.length * 100)) : 8;
+          return `<div class="dash-week-bar" title="${dayDone}/${dayHabits.length}"><span style="height:${dayPct}%"></span></div>`;
+        }).join('');
+      }
+    } catch(e) { console.warn('Dashboard update skipped', e); }
+  };
+  window.addEventListener('load', () => setTimeout(() => { if (typeof window.updateProgress === 'function') window.updateProgress(); }, 50));
+})();
+</script>
+
 </body>
 </html>
