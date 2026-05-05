@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MV26 v2 Updated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;--panel:#ffffff;--soft:#f7f8f6;--soft2:#eef2ea;--text:#101210;--muted:#70756d;--line:#e4e8df;
+  --olive:#60704f;--olive2:#899777;--oliveSoft:#eef4e9;--danger:#a44f4f;--shadow:0 16px 42px rgba(16,18,16,.08);
+  --navH:72px;--safe:env(safe-area-inset-bottom,0px);--r:18px;
+}
+*{box-sizing:border-box} html,body{height:100%;margin:0} body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow:hidden}
+button,input{font:inherit} button{cursor:pointer;-webkit-tap-highlight-color:transparent} .app-shell{height:100dvh;max-width:430px;margin:0 auto;background:#fff;position:relative;display:flex;flex-direction:column;border-left:1px solid rgba(0,0,0,.04);border-right:1px solid rgba(0,0,0,.04)}
+.views{flex:1;overflow:hidden;position:relative}.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 18px calc(var(--navH) + var(--safe) + 24px);display:none}.view.active{display:block;animation:fadeUp .18s ease both}@keyframes fadeUp{from{opacity:.5;transform:translateY(5px)}to{opacity:1;transform:none}}
+.top{display:flex;align-items:center;justify-content:space-between;margin:4px 0 18px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--olive2);font-weight:800}.title{font-size:31px;letter-spacing:-.05em;font-weight:780;margin-top:3px}.date-pill{font-size:12px;color:var(--muted);font-weight:650;background:var(--soft);border:1px solid var(--line);padding:8px 11px;border-radius:999px;white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 0 rgba(0,0,0,.02);padding:16px}.card.soft{background:var(--soft)}.stack{display:flex;flex-direction:column;gap:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.label{font-size:12px;font-weight:800;color:var(--olive2);letter-spacing:.08em;text-transform:uppercase;margin:22px 0 10px}.muted{color:var(--muted)}
+.quote-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:0 1px 0 rgba(0,0,0,.02);margin-bottom:12px;position:relative;overflow:hidden}.quote-card:after{content:"";position:absolute;right:-52px;top:-62px;width:160px;height:160px;border-radius:50%;background:rgba(96,112,79,.07)}.quote-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--olive2);font-weight:800}.quote{font-size:16px;line-height:1.48;color:#2f342c;font-weight:690;letter-spacing:-.015em;margin-top:10px;position:relative;z-index:1}.quote-author{font-size:12px;color:var(--muted);margin-top:10px;font-weight:650;position:relative;z-index:1}
+.hero{background:linear-gradient(180deg,#fbfcfa 0%,#f3f6ef 100%);border:1px solid var(--line);border-radius:26px;padding:20px;position:relative;overflow:hidden}.hero:after{content:"";position:absolute;right:-44px;top:-58px;width:180px;height:180px;border-radius:50%;background:rgba(96,112,79,.09)}.hero-main{position:relative;z-index:1}.hero-num{font-size:58px;line-height:.92;letter-spacing:-.07em;font-weight:800;color:var(--olive)}.hero-sub{font-size:14px;color:var(--muted);font-weight:650;margin-top:8px}.bar{height:8px;background:#e9ece5;border-radius:999px;overflow:hidden}.bar>span{display:block;height:100%;width:0;background:var(--olive);border-radius:999px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.tile{border:1px solid var(--line);background:#fff;border-radius:18px;padding:15px;cursor:pointer;transition:transform .14s ease,background .14s ease}.tile:active,.press:active{transform:scale(.98)}.tile-title{font-weight:750;letter-spacing:-.02em}.tile-meta{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.35}.tile-stat{font-size:25px;color:var(--olive);font-weight:800;letter-spacing:-.04em;margin-bottom:8px}
+.day-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:18px;background:var(--soft)}.day-left{min-width:96px}.day-name{font-weight:760}.day-date{font-size:12px;color:var(--muted);margin-top:2px}.day-progress{flex:1}.pct{font-size:12px;color:var(--olive);font-weight:850;text-align:right;margin-bottom:6px}
+.habit-toolbar{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}.habit-card{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}.habit-card:last-child{border-bottom:0}.habit-visual{width:42px;height:42px;border-radius:14px;background:var(--oliveSoft);display:grid;place-items:center;flex:0 0 auto}.habit-visual svg{width:23px;height:23px;stroke:var(--olive);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.habit-body{flex:1;min-width:0}.habit-name{font-weight:700;letter-spacing:-.02em}.habit-meta{font-size:13px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.habit-actions{display:flex;align-items:center;gap:8px}.check{width:24px;height:24px;border-radius:50%;border:1.5px solid #cdd4c6;display:grid;place-items:center;flex:0 0 auto;transition:all .22s cubic-bezier(.34,1.56,.64,1);font-size:13px;font-weight:900}.habit-card.done .check{background:var(--olive);border-color:var(--olive);color:#fff}.habit-card.done .habit-name{text-decoration:line-through;text-decoration-color:#b8c0b0;color:#697062}.edit-btn{border:0;background:transparent;color:var(--muted);padding:8px;border-radius:10px}.edit-btn:active{background:var(--soft)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;font-weight:750;color:var(--text);font-family:inherit;cursor:pointer}.btn.primary{background:var(--olive);border-color:var(--olive);color:#fff}.btn.ghost{background:var(--soft)}.btn.danger{color:var(--danger)}.btn.small{padding:8px 10px;font-size:12px;border-radius:12px}input,select{width:100%;border:1px solid var(--line);background:#fff;border-radius:13px;padding:12px;font:inherit;font-weight:650;color:var(--text);outline:none}input:focus,select:focus{border-color:rgba(96,112,79,.45);box-shadow:0 0 0 3px rgba(96,112,79,.10)}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.full{grid-column:1/-1}
+.exercise{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff}.ex-head{padding:14px 15px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;background:var(--soft)}.ex-name{font-weight:780;letter-spacing:-.025em}.ex-target{font-size:12px;color:var(--muted);margin-top:4px}.set-head,.set-row{display:grid;grid-template-columns:32px 1fr 1fr 42px;gap:8px;align-items:center}.set-head{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:850;padding:12px 14px 4px}.set-row{padding:9px 14px;border-top:1px solid var(--line)}.set-row input{text-align:center;padding:10px 6px}.set-num{font-weight:850;color:var(--muted);text-align:center}.set-done{height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;font-weight:900}.set-done.done{background:var(--olive);border-color:var(--olive);color:#fff}.session-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.history-item{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}.history-item:last-child{border-bottom:0}.history-title{font-weight:750}.history-meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4}.history-value{font-weight:850;color:var(--olive);white-space:nowrap}
+.timer{position:absolute;left:14px;right:14px;bottom:calc(var(--navH) + var(--safe) + 10px);background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:22px;padding:13px 14px;display:none;z-index:30}.timer.show{display:flex;align-items:center;justify-content:space-between;gap:12px}.timer-time{font-size:24px;font-weight:800;letter-spacing:-.04em;color:var(--olive)}.timer-label{font-size:12px;color:var(--muted);font-weight:800}.timer-actions{display:flex;gap:8px}.timer-actions button{padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:750}
+.chart{width:100%;height:150px}.chart path,.chart polyline{fill:none;stroke:var(--olive);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.chart .grid{stroke:#e7eae3;stroke-width:1}.bars{display:flex;align-items:end;gap:8px;height:130px;padding-top:12px;margin-bottom:22px}.bar-col{flex:1;background:var(--oliveSoft);border-radius:8px 8px 4px 4px;position:relative;min-height:8px}.bar-col span{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);font-weight:750}.profile-log{max-height:240px;overflow:auto}.profile-note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}.nav{height:calc(var(--navH) + var(--safe));padding-bottom:var(--safe);border-top:1px solid var(--line);background:rgba(255,255,255,.94);backdrop-filter:blur(18px);display:flex;flex:0 0 auto;z-index:20}.nav button{flex:1;border:0;background:transparent;font-family:inherit;color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}.nav button.active{color:var(--olive)}.nav svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.empty{padding:22px;text-align:center;color:var(--muted);font-weight:650}
+
+.stats-hero{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.stat-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;min-height:104px}.stat-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--olive2);font-weight:850}.stat-big{font-size:34px;line-height:1;margin-top:12px;color:var(--olive);font-weight:850;letter-spacing:-.055em}.stat-sub{font-size:12px;color:var(--muted);font-weight:650;margin-top:7px;line-height:1.35}.chart-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.chart-title strong{font-size:15px;letter-spacing:-.02em}.chart-title span{font-size:12px;color:var(--muted);font-weight:650;text-align:right}.bars.compact{height:112px;margin:4px 0 24px}.bar-col{transition:height .32s cubic-bezier(.2,.8,.2,1), background .18s}.bar-col.hot{background:var(--olive)}.bar-col.hot span{color:var(--olive)}.chart-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:750;margin-top:8px}.insight-list{display:flex;flex-direction:column;gap:10px}.insight{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.insight:last-child{border-bottom:0}.insight-main{font-weight:750;letter-spacing:-.02em}.insight-meta{font-size:12px;color:var(--muted);font-weight:650;margin-top:3px}.insight-value{font-size:18px;color:var(--olive);font-weight:850;white-space:nowrap}.chart-mini{height:118px}.chart-area{fill:rgba(96,112,79,.09);stroke:none}.chart-dot{fill:var(--olive)}
+
+.modal{position:absolute;inset:0;background:rgba(16,18,16,.28);backdrop-filter:blur(10px);z-index:50;display:none;align-items:flex-end}.modal.show{display:flex}.sheet{width:100%;background:#fff;border-radius:28px 28px 0 0;border:1px solid var(--line);box-shadow:var(--shadow);padding:18px 18px calc(18px + var(--safe))}.sheet-title{font-size:20px;font-weight:800;letter-spacing:-.03em}.sheet-sub{font-size:13px;color:var(--muted);font-weight:600;margin-top:5px;line-height:1.45}.icon-picker{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.icon-choice{height:46px;border:1px solid var(--line);border-radius:14px;background:#fff;display:grid;place-items:center}.icon-choice.selected{border-color:var(--olive);background:var(--oliveSoft)}.icon-choice svg{width:23px;height:23px;stroke:var(--olive);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:360px){.title{font-size:28px}.hero-num{font-size:50px}.view{padding-left:14px;padding-right:14px}.grid2{gap:9px}.tile{padding:13px}.set-head,.set-row{grid-template-columns:28px 1fr 1fr 38px}}
+
+.history-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-left:10px}
+.history-actions .btn{padding:7px 9px;font-size:12px;border-radius:10px}
+.history-item.editable{gap:10px}
+
+
+/* === Stripe-like polish pass: white + olive === */
+:root{
+  --bg:#fbfcfd;
+  --panel:#ffffff;
+  --soft:#f7f9f6;
+  --soft2:#eef4ea;
+  --text:#101210;
+  --muted:#667063;
+  --line:#dfe6dc;
+  --olive:#5f6f52;
+  --olive2:#7d8c70;
+  --oliveSoft:#eef5ea;
+  --danger:#a44f4f;
+  --shadow:0 18px 45px rgba(31,41,27,.08),0 2px 6px rgba(31,41,27,.04);
+}
+body{background:
+  radial-gradient(circle at 18% -8%, rgba(95,111,82,.09), transparent 30%),
+  linear-gradient(180deg,#fff 0%,#fbfcfd 58%,#f7f9f6 100%) !important;}
+.app-shell{background:rgba(255,255,255,.92) !important;box-shadow:0 0 0 1px rgba(16,18,16,.03),0 30px 90px rgba(31,41,27,.10);}
+.view{padding-top:20px;}
+.top{padding:4px 1px 2px;margin-bottom:16px;}
+.eyebrow{color:var(--olive);letter-spacing:.16em;}
+.title{font-size:32px;font-weight:800;letter-spacing:-.055em;}
+.date-pill{background:#fff;border-color:rgba(95,111,82,.16);box-shadow:0 1px 2px rgba(31,41,27,.04);}
+.card,.tile,.stat-card,.exercise,.quote-card,.hero{box-shadow:var(--shadow);border-color:rgba(95,111,82,.14);}
+.card{background:linear-gradient(180deg,#fff,#fcfdfb);}
+.card.soft{background:linear-gradient(180deg,#f9fbf7,#f4f7f1);}
+.quote-card{background:
+  linear-gradient(135deg,rgba(255,255,255,.98),rgba(247,250,245,.95)),
+  radial-gradient(circle at 100% 0%,rgba(95,111,82,.12),transparent 34%);border-radius:26px;padding:19px 18px;}
+.quote-card:after{background:linear-gradient(135deg,rgba(95,111,82,.12),rgba(95,111,82,0));}
+.quote-kicker,.stat-kicker,.label{color:var(--olive);}
+.hero{background:
+  radial-gradient(circle at 88% 0%,rgba(95,111,82,.16),transparent 36%),
+  linear-gradient(135deg,#ffffff 0%,#f7faf5 54%,#eef5ea 100%);border-radius:30px;padding:22px;}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,255,255,.85),rgba(255,255,255,0) 42%);pointer-events:none;}
+.hero:after{background:rgba(95,111,82,.10);filter:blur(1px);}
+.hero-num{font-size:64px;letter-spacing:-.075em;color:var(--olive);}
+.hero-sub{color:#586252;}
+.bar{height:9px;background:#edf2ea;box-shadow:inset 0 1px 2px rgba(31,41,27,.06);}
+.bar>span{background:linear-gradient(90deg,#7d8c70,#5f6f52);box-shadow:0 0 0 1px rgba(255,255,255,.4) inset;}
+.tile{background:linear-gradient(180deg,#fff,#fbfdf9);border-radius:22px;padding:17px;position:relative;overflow:hidden;}
+.tile:before{content:"";position:absolute;right:-24px;top:-30px;width:90px;height:90px;border-radius:999px;background:rgba(95,111,82,.055);}
+.tile-title,.history-title,.habit-name,.ex-name{letter-spacing:-.025em;}
+.tile-stat{font-size:31px;color:var(--olive);position:relative;z-index:1;}
+.tile-meta,.muted,.history-meta,.stat-sub{color:var(--muted);}
+.day-row{background:linear-gradient(135deg,#fff,#f7faf5);border-color:rgba(95,111,82,.14);box-shadow:0 10px 28px rgba(31,41,27,.06);}
+.habit-card{padding:15px 0;transition:background .15s ease, transform .15s ease;}
+.habit-card:active{transform:scale(.993);}
+.habit-visual{background:linear-gradient(135deg,#eef5ea,#f8fbf6);box-shadow:inset 0 0 0 1px rgba(95,111,82,.10);}
+.check{background:#fff;box-shadow:0 1px 2px rgba(31,41,27,.05);}
+.btn{box-shadow:0 1px 2px rgba(31,41,27,.04);transition:transform .14s ease, box-shadow .14s ease, background .14s ease;}
+.btn:active{transform:scale(.98);}
+.btn.primary{background:linear-gradient(180deg,#6f8060,#5f6f52);box-shadow:0 10px 22px rgba(95,111,82,.18);}
+.exercise{border-radius:24px;background:#fff;overflow:hidden;}
+.ex-head{background:linear-gradient(180deg,#f9fbf7,#f2f7ef);}
+.set-row{transition:background .12s ease;}.set-row:focus-within{background:#fafcf8;}
+.set-done.done{background:linear-gradient(180deg,#6f8060,#5f6f52);box-shadow:0 6px 16px rgba(95,111,82,.18);}
+.stat-card{background:linear-gradient(180deg,#fff,#fbfdf9);border-radius:22px;position:relative;overflow:hidden;}
+.stat-card:after{content:"";position:absolute;right:-32px;top:-38px;width:105px;height:105px;border-radius:999px;background:rgba(95,111,82,.06);}
+.stat-big{position:relative;z-index:1;color:var(--olive);}
+.bars{display:flex;align-items:flex-end;gap:8px;height:130px;padding-top:8px;}
+.bar-col{flex:1;min-width:0;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#c8d4bf,#aebda3);position:relative;display:flex;align-items:flex-end;justify-content:center;}
+.bar-col span{position:absolute;bottom:-22px;font-size:10px;color:var(--muted);font-weight:750;}
+.bar-col.hot{background:linear-gradient(180deg,#7d8c70,#5f6f52);}
+.chart-mini svg{filter:drop-shadow(0 10px 18px rgba(95,111,82,.10));}
+.nav{background:rgba(255,255,255,.86);backdrop-filter:blur(22px);border-top-color:rgba(95,111,82,.14);box-shadow:0 -16px 36px rgba(31,41,27,.06);}
+.nav button{transition:color .14s ease, transform .14s ease;}.nav button:active{transform:translateY(1px)}
+.modal{background:rgba(16,18,16,.20);}.sheet{box-shadow:0 -24px 70px rgba(31,41,27,.16);}
+
+
+
+/* === Full redesign: dusky pink + olive, no circle tile decorations === */
+:root{
+  --bg:#fcfcfc;
+  --panel:#ffffff;
+  --soft:#f8f8f7;
+  --soft2:#f1f3ef;
+  --text:#0b0b0c;
+  --muted:#6e716b;
+  --line:#e6e7e4;
+  --olive:#5f6f52;
+  --olive2:#7f8b73;
+  --oliveSoft:#eef3ea;
+  --pink:#bd7f87;
+  --pink2:#d7a7ad;
+  --pinkSoft:#f8eef0;
+  --danger:#a44f4f;
+  --shadow:0 10px 30px rgba(20,24,18,.055),0 1px 2px rgba(20,24,18,.045);
+  --shadow2:0 18px 48px rgba(20,24,18,.075),0 2px 6px rgba(20,24,18,.04);
+}
+body{background:linear-gradient(180deg,#fff 0%,#fcfcfc 54%,#f7f8f6 100%) !important;}
+.app-shell{background:#fff !important;box-shadow:0 0 0 1px rgba(10,10,12,.035),0 24px 80px rgba(20,24,18,.06)!important;}
+.eyebrow{color:var(--olive)!important}.title{color:var(--text)}.date-pill{background:#fff;border-color:var(--line);box-shadow:0 1px 2px rgba(10,10,12,.035);}
+.card,.tile,.stat-card,.exercise,.quote-card,.hero{border-color:var(--line)!important;box-shadow:var(--shadow)!important;background:#fff!important;}
+.card.soft{background:var(--soft)!important;}
+/* Remove decorative circle blobs everywhere */
+.quote-card:after,.hero:after,.hero:before,.tile:before,.stat-card:after{display:none!important;content:none!important;}
+.quote-card{border-radius:22px!important;padding:18px!important;background:linear-gradient(180deg,#fff,#fffafa)!important;}
+.quote-kicker,.label{color:var(--olive)!important}.stat-kicker{color:var(--muted)!important;}
+.quote{color:#272923!important;font-weight:650!important}.quote-author{color:var(--muted)!important;}
+/* Dashboard hero: data block, not illustrated card */
+.hero{border-radius:22px!important;padding:20px!important;background:linear-gradient(180deg,#fff,#fbfbfa)!important;position:relative;}
+.hero:before{display:block!important;content:""!important;position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--olive),var(--pink));border-radius:22px 0 0 22px;}
+.hero-main{position:relative;z-index:1}.hero-num{font-size:62px!important;color:var(--olive)!important;font-weight:760!important;letter-spacing:-.075em!important;}
+.hero-sub{color:var(--muted)!important;font-weight:650!important;}
+.bar{height:7px!important;background:#edeFec!important;box-shadow:none!important;}
+.bar>span{background:linear-gradient(90deg,var(--olive),var(--pink))!important;box-shadow:none!important;}
+/* Stripe-like tiles: label/value/content only */
+.tile{border-radius:18px!important;padding:16px!important;overflow:hidden!important;background:linear-gradient(180deg,#fff,#fcfcfb)!important;transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease!important;}
+.tile:hover{border-color:#d8dbd5!important;box-shadow:var(--shadow2)!important}.tile:active{transform:scale(.985)!important;}
+.tile-stat{font-size:30px!important;line-height:1!important;margin:0 0 10px!important;color:var(--olive)!important;font-weight:760!important;letter-spacing:-.055em!important;}
+.grid2 .tile:nth-child(2) .tile-stat{color:var(--pink)!important;}
+.tile-title{font-size:15px!important;font-weight:720!important;color:var(--text)!important;}
+.tile-meta{font-size:12px!important;color:var(--muted)!important;line-height:1.42!important;}
+/* Habit visuals become designed badges, not circular icons */
+.day-row{background:#fff!important;border-color:var(--line)!important;box-shadow:var(--shadow)!important;border-radius:18px!important;}
+.day-name{color:var(--text)}.pct{color:var(--olive)!important;}
+.habit-visual{border-radius:12px!important;background:linear-gradient(180deg,var(--oliveSoft),#fff)!important;box-shadow:inset 0 0 0 1px rgba(95,111,82,.12)!important;}
+.habit-card:nth-child(even) .habit-visual{background:linear-gradient(180deg,var(--pinkSoft),#fff)!important;box-shadow:inset 0 0 0 1px rgba(189,127,135,.14)!important;}
+.habit-card:nth-child(even) .habit-visual svg{stroke:var(--pink)!important;}.habit-visual svg{stroke:var(--olive)!important;}
+.habit-card.done .check,.set-done.done{background:var(--olive)!important;border-color:var(--olive)!important;box-shadow:0 6px 18px rgba(95,111,82,.16)!important;}
+.btn.primary{background:var(--olive)!important;border-color:var(--olive)!important;box-shadow:0 8px 20px rgba(95,111,82,.16)!important;}
+input:focus,select:focus{border-color:rgba(189,127,135,.42)!important;box-shadow:0 0 0 3px rgba(189,127,135,.11)!important;}
+/* Workout */
+.exercise{border-radius:20px!important;background:#fff!important;}.ex-head{background:linear-gradient(180deg,#fff,#fafafa)!important;border-bottom:1px solid var(--line)!important;}
+.ex-target{color:var(--muted)!important}.history-value{color:var(--olive)!important;}
+/* Stats: remove circle treatments; make blocks editorial */
+.stats-hero{gap:10px!important}.stat-card{border-radius:18px!important;background:linear-gradient(180deg,#fff,#fcfcfb)!important;min-height:110px!important;padding:15px!important;}
+.stat-big{color:var(--olive)!important;font-size:33px!important;font-weight:760!important;letter-spacing:-.055em!important;}
+.stats-hero .stat-card:nth-child(2) .stat-big,.stats-hero .stat-card:nth-child(4) .stat-big{color:var(--pink)!important;}
+.insight-value{color:var(--olive)!important}.insight:nth-child(even) .insight-value{color:var(--pink)!important;}
+.bar-col{background:linear-gradient(180deg,var(--pink2),var(--pink))!important;border-radius:8px 8px 3px 3px!important;}
+.bar-col.hot{background:linear-gradient(180deg,var(--olive2),var(--olive))!important;}.bar-col.hot span{color:var(--olive)!important;}
+.chart path,.chart polyline{stroke:var(--olive)!important}.chart-area{fill:rgba(189,127,135,.11)!important}.chart-dot{fill:var(--pink)!important}.chart .grid{stroke:#ececea!important;}
+/* Navigation */
+.nav{background:rgba(255,255,255,.94)!important;border-top-color:var(--line)!important;box-shadow:0 -12px 28px rgba(20,24,18,.045)!important;}
+.nav button.active{color:var(--olive)!important;}
+.timer-time{color:var(--pink)!important;}
+.modal{background:rgba(10,10,12,.18)!important}.sheet{box-shadow:0 -24px 70px rgba(20,24,18,.16)!important;}
+
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <main class="views">
+    <section id="view-dashboard" class="view active"></section>
+    <section id="view-habits" class="view"></section>
+    <section id="view-workout" class="view"></section>
+    <section id="view-stats" class="view"></section>
+    <section id="view-profile" class="view"></section>
+  </main>
+
+  <div id="timer" class="timer"><div><div class="timer-label">Rest timer</div><div id="timerTime" class="timer-time">1:30</div></div><div class="timer-actions"><button onclick="toggleTimer()" id="pauseBtn">Pause</button><button onclick="skipTimer()">Skip</button></div></div>
+
+  <div id="habitModal" class="modal" onclick="closeHabitModal(event)">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-title" id="habitModalTitle">Add habit</div>
+      <div class="sheet-sub">Choose a visual, name the habit, and add a short cue.</div>
+      <div class="form-row">
+        <input id="habitNameInput" class="full" placeholder="Habit name">
+        <input id="habitMetaInput" class="full" placeholder="Cue or schedule, e.g. 7:00am">
+      </div>
+      <div class="icon-picker" id="iconPicker"></div>
+      <div class="sheet-actions">
+        <button class="btn ghost" onclick="hideHabitModal()">Cancel</button>
+        <button class="btn primary" onclick="saveHabitFromModal()">Save habit</button>
+      </div>
+      <button id="deleteHabitBtn" class="btn danger" style="width:100%;margin-top:10px;display:none" onclick="deleteCurrentHabit()">Delete habit</button>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button id="nav-dashboard" class="active" onclick="switchTab('dashboard')"><svg viewBox="0 0 24 24"><path d="M4 13h7V4H4zM13 20h7V4h-7zM4 20h7v-5H4z"/></svg>Dashboard</button>
+    <button id="nav-habits" onclick="switchTab('habits')"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Habits</button>
+    <button id="nav-workout" onclick="switchTab('workout')"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 5v14M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>Workout</button>
+    <button id="nav-stats" onclick="switchTab('stats')"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-9"/></svg>Stats</button>
+    <button id="nav-profile" onclick="switchTab('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 14.5-4 16 0"/></svg>Profile</button>
+  </nav>
+</div>
+<script>
+const KEY='mv26_v2_olive_app';
+const iconSet={
+  walk:'<svg viewBox="0 0 24 24"><path d="M13 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/><path d="M10 8l-2 5 4 2 1 5M12 9l3 3 3 1M8 20l2-4"/></svg>',
+  strength:'<svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>',
+  water:'<svg viewBox="0 0 24 24"><path d="M12 3s6 6.1 6 11a6 6 0 0 1-12 0c0-4.9 6-11 6-11Z"/></svg>',
+  sleep:'<svg viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg>',
+  food:'<svg viewBox="0 0 24 24"><path d="M6 3v18M10 3v6a4 4 0 0 1-8 0V3M17 3v18M17 3c3 2 4 5 3 9h-3"/></svg>',
+  screen:'<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M9 21h6M12 17v4"/></svg>',
+  social:'<svg viewBox="0 0 24 24"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM16 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 21c.7-4 4-6 8-6s7.3 2 8 6M14 21c.4-2 1.8-3.3 4-3.3 1.8 0 3.2 1 4 3.3"/></svg>',
+  journal:'<svg viewBox="0 0 24 24"><path d="M6 4h10a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4Z"/><path d="M9 8h6M9 12h5"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24"><path d="M20 4C11 4 5 9 5 17c0 2 1 3 3 3 8 0 12-8 12-16Z"/><path d="M5 19c3-6 8-9 15-15"/></svg>',
+  sun:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+};
+const defaultState={
+  habits:[
+    {id:'walk',name:'Morning walk',meta:'20 minutes outside',icon:'walk'},
+    {id:'strength',name:'Strength training',meta:'Full-body session',icon:'strength'},
+    {id:'water',name:'Hydration',meta:'Water before coffee',icon:'water'},
+    {id:'food',name:'Ate well',meta:'One intentional meal',icon:'food'},
+    {id:'sleep',name:'Sleep routine',meta:'Wind down by 10pm',icon:'sleep'}
+  ],
+  habitLog:{},
+  exercises:[
+    {id:'squat',name:'Goblet Squat',target:'3 x 8-12'},
+    {id:'rdl',name:'Romanian Deadlift',target:'3 x 8-12'},
+    {id:'push',name:'Push-Up',target:'3 x 8-12'},
+    {id:'row',name:'Bent-Over Row',target:'3 x 8-12'}
+  ],
+  workouts:[], weightLogs:[], measurementLogs:[], profile:{name:''}
+};
+let state=load(); let tab='dashboard'; let timerInt=null,timerLeft=90,timerPaused=false; let editingHabitId=null; let selectedIcon='leaf';
+function load(){try{const saved=JSON.parse(localStorage.getItem(KEY))||{};return mergeState(structuredClone(defaultState),saved)}catch{return structuredClone(defaultState)}}
+function mergeState(base,saved){const out={...base,...saved};out.habits=saved.habits||base.habits;out.exercises=saved.exercises||base.exercises;out.habitLog=saved.habitLog||{};out.workouts=saved.workouts||[];out.weightLogs=saved.weightLogs||[];out.measurementLogs=saved.measurementLogs||[];out.profile=saved.profile||base.profile;out.weightLogs.forEach((w,i)=>{if(!w.ts)w.ts=Date.now()+i});out.measurementLogs.forEach((m,i)=>{if(!m.ts)m.ts=Date.now()+1000+i});out.workouts.forEach((w,i)=>{if(!w.id)w.id=Date.now()+2000+i});return out}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function todayKey(d=new Date()){return d.toISOString().slice(0,10)}
+function fmtDate(d=new Date()){return d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}
+function fullStamp(){return new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})}
+function todayDone(){const log=state.habitLog[todayKey()]||{};return state.habits.filter(h=>log[h.id]).length}
+function habitPct(){return state.habits.length?Math.round(todayDone()/state.habits.length*100):0}
+function switchTab(t){tab=t;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+t).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));document.getElementById('nav-'+t).classList.add('active');render()}
+function topHtml(title,eyebrow='MV26'){return `<div class="top"><div><div class="eyebrow">${eyebrow}</div><div class="title">${title}</div></div><div class="date-pill">${fmtDate()}</div></div>`}
+function render(){renderDashboard();renderHabits();renderWorkout();renderStats();renderProfile()}
+const quotes=['Better by one percent is still better.','Show up small, but show up completely.','Consistency is a quiet form of confidence.','The next rep is the only one that matters.','Make the better choice obvious and easy.','Resilience is built by keeping promises to yourself.','A calm system beats a dramatic sprint.','Progress compounds quietly, then all at once.','Start where you are. Reduce the friction. Repeat.'];
+function dailyQuote(){const n=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);return quotes[n%quotes.length]}
+function renderDashboard(){const pct=habitPct(),last=state.workouts[0];document.getElementById('view-dashboard').innerHTML=topHtml('Dashboard')+`
+  <div class="quote-card"><div class="quote-kicker">Daily quote</div><div class="quote">${dailyQuote()}</div><div class="quote-author">Small improvements compound.</div></div>
+  <div class="hero"><div class="hero-main"><div class="hero-num">${pct}%</div><div class="hero-sub">${todayDone()} of ${state.habits.length} habits complete today</div><div class="bar" style="margin-top:18px"><span style="width:${pct}%"></span></div></div></div>
+  <div class="grid2" style="margin-top:12px"><div class="tile" onclick="switchTab('habits')"><div class="tile-stat">${todayDone()}/${state.habits.length}</div><div class="tile-title">Habits</div><div class="tile-meta">Daily completion and routines</div></div><div class="tile" onclick="switchTab('workout')"><div class="tile-stat">${last?formatNum(last.volume):0}</div><div class="tile-title">Workout</div><div class="tile-meta">${last?'Last saved volume':'Log a strength session'}</div></div></div>`}
+function iconSvg(key){return iconSet[key]||iconSet.leaf}
+function renderHabits(){const pct=habitPct();const log=state.habitLog[todayKey()]||{};document.getElementById('view-habits').innerHTML=topHtml('Habits','Daily system')+`
+  <div class="day-row"><div class="day-left"><div class="day-name">${new Date().toLocaleDateString('en-US',{weekday:'long'})}</div><div class="day-date">${todayKey()}</div></div><div class="day-progress"><div class="pct">${pct}%</div><div class="bar"><span style="width:${pct}%"></span></div></div></div>
+  <div class="habit-toolbar"><div class="label" style="margin:0">Today's habits</div><button class="btn small primary" onclick="openHabitModal()">+ Add</button></div>
+  <div class="card">${state.habits.map(h=>`<div class="habit-card ${log[h.id]?'done':''}"><div class="habit-visual" onclick="toggleHabit('${h.id}')">${iconSvg(h.icon)}</div><div class="habit-body" onclick="toggleHabit('${h.id}')"><div class="habit-name">${escapeHtml(h.name)}</div><div class="habit-meta">${escapeHtml(h.meta||'No cue yet')}</div></div><div class="habit-actions"><button class="edit-btn" onclick="openHabitModal('${h.id}')" aria-label="Edit habit">✎</button><div class="check" onclick="toggleHabit('${h.id}')">${log[h.id]?'✓':''}</div></div></div>`).join('')||'<div class="empty">No habits yet.</div>'}</div>`}
+function toggleHabit(id){const k=todayKey();state.habitLog[k]=state.habitLog[k]||{};state.habitLog[k][id]=!state.habitLog[k][id];save();render()}
+function openHabitModal(id=null){editingHabitId=id;const h=id?state.habits.find(x=>x.id===id):null;selectedIcon=h?.icon||'leaf';document.getElementById('habitModalTitle').textContent=id?'Edit habit':'Add habit';document.getElementById('habitNameInput').value=h?.name||'';document.getElementById('habitMetaInput').value=h?.meta||'';document.getElementById('deleteHabitBtn').style.display=id?'block':'none';renderIconPicker();document.getElementById('habitModal').classList.add('show');setTimeout(()=>document.getElementById('habitNameInput').focus(),80)}
+function renderIconPicker(){const picker=document.getElementById('iconPicker');picker.innerHTML=Object.keys(iconSet).map(k=>`<button class="icon-choice ${k===selectedIcon?'selected':''}" onclick="selectIcon('${k}')">${iconSvg(k)}</button>`).join('')}
+function selectIcon(k){selectedIcon=k;renderIconPicker()}
+function hideHabitModal(){document.getElementById('habitModal').classList.remove('show')}
+function closeHabitModal(e){if(e.target.id==='habitModal')hideHabitModal()}
+function saveHabitFromModal(){const name=document.getElementById('habitNameInput').value.trim();const meta=document.getElementById('habitMetaInput').value.trim();if(!name){alert('Add a habit name.');return}if(editingHabitId){const h=state.habits.find(x=>x.id===editingHabitId);if(h){h.name=name;h.meta=meta;h.icon=selectedIcon}}else{state.habits.push({id:'h'+Date.now(),name,meta,icon:selectedIcon})}save();hideHabitModal();render()}
+function deleteCurrentHabit(){if(!editingHabitId)return;state.habits=state.habits.filter(h=>h.id!==editingHabitId);Object.values(state.habitLog).forEach(day=>delete day[editingHabitId]);save();hideHabitModal();render()}
+function renderWorkout(){document.getElementById('view-workout').innerHTML=topHtml('Workout','Strength log')+`
+  <div class="stack">${state.exercises.map(ex=>exerciseHtml(ex)).join('')}</div><div class="session-actions"><button class="btn ghost" onclick="resetWorkoutInputs()">Clear</button><button class="btn primary" onclick="saveWorkout()">Save session</button></div>
+  <div class="label">Recent sessions</div><div class="card">${state.workouts.length?state.workouts.slice(0,8).map(w=>`<div class="history-item editable"><div><div class="history-title">${escapeHtml(w.dateLabel||w.stamp||w.date||'Workout')}</div><div class="history-meta">${w.sets} sets · ${w.exercises} exercises</div></div><div class="history-value">${w.volume}</div><div class="history-actions"><button class="btn" onclick="editWorkout(${w.id})">Edit</button><button class="btn danger" onclick="deleteWorkout(${w.id})">Delete</button></div></div>`).join(''):'<div class="empty">No workouts saved yet.</div>'}</div>`}
+function exerciseHtml(ex){return `<div class="exercise"><div class="ex-head"><div><div class="ex-name">${escapeHtml(ex.name)}</div><div class="ex-target">${escapeHtml(ex.target)}</div></div></div><div class="set-head"><div>Set</div><div>Reps</div><div>Weight</div><div></div></div>${[1,2,3].map(i=>`<div class="set-row"><div class="set-num">${i}</div><input inputmode="numeric" id="${ex.id}-r-${i}" placeholder="0"><input inputmode="decimal" id="${ex.id}-w-${i}" placeholder="0"><button class="set-done" onclick="markSet(this)">✓</button></div>`).join('')}</div>`}
+function markSet(btn){btn.classList.toggle('done');startTimer(90)}
+function resetWorkoutInputs(){document.querySelectorAll('#view-workout input').forEach(i=>i.value='');document.querySelectorAll('.set-done').forEach(b=>b.classList.remove('done'))}
+function saveWorkout(){let sets=0,volume=0,exCount=0,details=[];state.exercises.forEach(ex=>{let exSets=0,setRows=[];[1,2,3].forEach(i=>{const r=+document.getElementById(`${ex.id}-r-${i}`)?.value||0;const w=+document.getElementById(`${ex.id}-w-${i}`)?.value||0;if(r||w){sets++;exSets++;volume+=r*w;setRows.push({set:i,reps:r,weight:w})}});if(exSets){exCount++;details.push({id:ex.id,name:ex.name,sets:exSets,rows:setRows})}});if(!sets){alert('Enter at least one set.');return}state.workouts.unshift({id:Date.now(),date:todayKey(),dateLabel:fullStamp(),sets,volume,exercises:exCount,details});save();resetWorkoutInputs();render()}
+function editWorkout(id){const w=state.workouts.find(x=>x.id===id);if(!w)return;const volume=prompt('Workout volume',w.volume);if(volume===null)return;const sets=prompt('Number of sets',w.sets);if(sets===null)return;const exercises=prompt('Number of exercises',w.exercises);if(exercises===null)return;const stamp=prompt('Date / time label',w.dateLabel||fullStamp());if(stamp===null)return;w.volume=Number(volume)||0;w.sets=Number(sets)||0;w.exercises=Number(exercises)||0;w.dateLabel=stamp.trim()||w.dateLabel;w.editedAt=fullStamp();save();render()}
+function deleteWorkout(id){if(!confirm('Delete this workout entry?'))return;state.workouts=state.workouts.filter(x=>x.id!==id);save();render()}
+function renderStats(){
+  const pct=habitPct();
+  const habit14=habitSeries(14);
+  const last7=habit14.slice(-7);
+  const weeklyAvg=Math.round(last7.reduce((a,d)=>a+d.value,0)/(last7.length||1));
+  const streak=currentStreak();
+  const perfect=perfectDays(30);
+  const w7=workoutsInDays(7);
+  const volume7=w7.reduce((a,w)=>a+(Number(w.volume)||0),0);
+  const workoutSeries=workoutVolumeSeries(14);
+  const lastWeight=state.weightLogs[state.weightLogs.length-1];
+  const prevWeight=state.weightLogs[state.weightLogs.length-2];
+  const weightDelta=(lastWeight&&prevWeight)?(Number(lastWeight.weight)-Number(prevWeight.weight)):null;
+  const latestMeasurement=state.measurementLogs[state.measurementLogs.length-1];
+  document.getElementById('view-stats').innerHTML=topHtml('Stats','Progress')+`
+    <div class="stats-hero">
+      <div class="stat-card"><div class="stat-kicker">Current streak</div><div class="stat-big">${streak}</div><div class="stat-sub">perfect day${streak===1?'':'s'} in a row</div></div>
+      <div class="stat-card"><div class="stat-kicker">7-day habits</div><div class="stat-big">${weeklyAvg}%</div><div class="stat-sub">average completion</div></div>
+      <div class="stat-card"><div class="stat-kicker">Workouts</div><div class="stat-big">${w7.length}</div><div class="stat-sub">sessions in last 7 days</div></div>
+      <div class="stat-card"><div class="stat-kicker">Volume</div><div class="stat-big">${formatNum(volume7)}</div><div class="stat-sub">lbs moved this week</div></div>
+    </div>
+
+    <div class="label">Habit consistency</div>
+    <div class="card">
+      <div class="chart-title"><strong>Last 14 days</strong><span>${perfect} perfect days<br>in last 30</span></div>
+      <div class="bars compact">${habit14.map(d=>`<div class="bar-col ${d.value>=100?'hot':''}" style="height:${Math.max(8,d.value)}%"><span>${d.label}</span></div>`).join('')}</div>
+    </div>
+
+    <div class="label">Workout volume</div>
+    <div class="card">
+      <div class="chart-title"><strong>Last 14 days</strong><span>${state.workouts.length} total<br>saved sessions</span></div>
+      ${barChart(workoutSeries,'volume')}
+    </div>
+
+    <div class="label">Weight trend</div>
+    <div class="card">
+      <div class="chart-title"><strong>${lastWeight?`${lastWeight.weight} lbs`:'No weight yet'}</strong><span>${weightDelta===null?'Log twice for change':`${weightDelta>0?'+':''}${weightDelta.toFixed(1)} lbs since prior`}</span></div>
+      ${lineChart(state.weightLogs.map(x=>Number(x.weight)).filter(Boolean))}
+    </div>
+
+    <div class="label">Body measurements</div>
+    <div class="card">
+      ${latestMeasurement?measurementSummary(latestMeasurement):'<div class="empty">Log measurements in Profile to track changes.</div>'}
+    </div>
+
+    <div class="label">Recent activity</div>
+    <div class="card"><div class="insight-list">
+      <div class="insight"><div><div class="insight-main">Today</div><div class="insight-meta">Habit completion</div></div><div class="insight-value">${pct}%</div></div>
+      <div class="insight"><div><div class="insight-main">Last workout</div><div class="insight-meta">${state.workouts[0]?.dateLabel||'No sessions yet'}</div></div><div class="insight-value">${state.workouts[0]?formatNum(state.workouts[0].volume):'—'}</div></div>
+      <div class="insight"><div><div class="insight-main">Profile logs</div><div class="insight-meta">Weight + measurements</div></div><div class="insight-value">${state.weightLogs.length+state.measurementLogs.length}</div></div>
+    </div></div>`
+}
+function habitSeries(days){return [...Array(days)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(days-1-i));const k=todayKey(d);const done=Object.values(state.habitLog[k]||{}).filter(Boolean).length;return {key:k,label:d.toLocaleDateString('en-US',{weekday:'short'}).slice(0,1),value:state.habits.length?Math.round(done/state.habits.length*100):0}})}
+function currentStreak(){let streak=0;for(let i=0;i<365;i++){const d=new Date();d.setDate(d.getDate()-i);const k=todayKey(d);const log=state.habitLog[k]||{};const done=state.habits.filter(h=>log[h.id]).length;if(state.habits.length&&done===state.habits.length)streak++;else break}return streak}
+function perfectDays(days){let n=0;for(let i=0;i<days;i++){const d=new Date();d.setDate(d.getDate()-i);const k=todayKey(d);const log=state.habitLog[k]||{};if(state.habits.length&&state.habits.every(h=>log[h.id]))n++}return n}
+function workoutsInDays(days){const cutoff=new Date();cutoff.setDate(cutoff.getDate()-(days-1));const ck=todayKey(cutoff);return state.workouts.filter(w=>(w.date||'')>=ck)}
+function workoutVolumeSeries(days){return [...Array(days)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(days-1-i));const k=todayKey(d);const volume=state.workouts.filter(w=>w.date===k).reduce((a,w)=>a+(Number(w.volume)||0),0);return {key:k,label:d.toLocaleDateString('en-US',{weekday:'short'}).slice(0,1),value:volume}})}
+function formatNum(n){n=Number(n)||0;return n>=1000?`${Math.round(n/100)/10}k`:String(Math.round(n))}
+function barChart(series){const max=Math.max(...series.map(x=>x.value),1);return `<div class="bars compact">${series.map(d=>`<div class="bar-col ${d.value? 'hot':''}" style="height:${Math.max(8,(d.value/max)*100)}%"><span>${d.label}</span></div>`).join('')}</div>`}
+function lineChart(vals){if(vals.length<2)return '<div class="empty">Log weight twice to see a trend.</div>';const v=vals.slice(-10),min=Math.min(...v),max=Math.max(...v),range=max-min||1;const pts=v.map((x,i)=>`${(i/(v.length-1))*300},${120-((x-min)/range)*96}`).join(' ');const area=`0,130 ${pts} 300,130`;return `<svg class="chart chart-mini" viewBox="0 0 300 140"><line class="grid" x1="0" y1="120" x2="300" y2="120"/><polygon class="chart-area" points="${area}"/><polyline points="${pts}"/>${v.map((x,i)=>`<circle class="chart-dot" cx="${(i/(v.length-1))*300}" cy="${120-((x-min)/range)*96}" r="3"/>`).join('')}</svg><div class="chart-labels"><span>${v[0]} lbs</span><span>${v[v.length-1]} lbs</span></div>`}
+function measurementSummary(m){const fields=[['Chest',m.chest],['Waist',m.waist],['Hips',m.hips],['Arms',m.arms],['Legs',m.legs]].filter(x=>x[1]);return `<div class="chart-title"><strong>Latest check-in</strong><span>${escapeHtml(m.stamp||'')}</span></div><div class="insight-list">${fields.map(([name,val])=>`<div class="insight"><div><div class="insight-main">${name}</div><div class="insight-meta">Current measurement</div></div><div class="insight-value">${escapeHtml(val)}</div></div>`).join('')||'<div class="empty">No measurement values saved.</div>'}</div>`}
+function renderProfile(){document.getElementById('view-profile').innerHTML=topHtml('Profile','Logs')+`
+  <div class="card"><div class="tile-title">Weight</div><div class="profile-note">Each entry captures the exact date and time it was logged. You can edit or delete any entry later.</div><div class="form-row"><input id="weightInput" type="number" inputmode="decimal" placeholder="Weight"><button class="btn primary" onclick="saveWeight()">Log</button></div><div class="profile-log">${state.weightLogs.slice().reverse().slice(0,10).map(w=>`<div class="history-item editable"><div><div class="history-title">${w.weight} lbs</div><div class="history-meta">${escapeHtml(w.stamp||'')}</div></div><div class="history-actions"><button class="btn" onclick="editWeight(${w.ts})">Edit</button><button class="btn danger" onclick="deleteWeight(${w.ts})">Delete</button></div></div>`).join('')||'<div class="empty">No weight logs.</div>'}</div></div>
+  <div class="label">Measurements</div><div class="card"><div class="profile-note">Track arms, legs, chest, waist, and hips with date/time stamps. Entries remain editable.</div><div class="form-row"><input id="mChest" placeholder="Chest"><input id="mWaist" placeholder="Waist"><input id="mHips" placeholder="Hips"><input id="mArms" placeholder="Arms"><input id="mLegs" placeholder="Legs"><button class="btn primary" onclick="saveMeasurements()">Log</button></div><div class="profile-log">${state.measurementLogs.slice().reverse().slice(0,8).map(m=>`<div class="history-item editable"><div><div class="history-title">${escapeHtml(m.stamp||'')}</div><div class="history-meta">Chest ${escapeHtml(m.chest||'-')} · Waist ${escapeHtml(m.waist||'-')} · Hips ${escapeHtml(m.hips||'-')} · Arms ${escapeHtml(m.arms||'-')} · Legs ${escapeHtml(m.legs||'-')}</div></div><div class="history-actions"><button class="btn" onclick="editMeasurement(${m.ts})">Edit</button><button class="btn danger" onclick="deleteMeasurement(${m.ts})">Delete</button></div></div>`).join('')||'<div class="empty">No measurement logs.</div>'}</div></div>`}
+function saveWeight(){const val=+document.getElementById('weightInput').value;if(!val)return;state.weightLogs.push({weight:val,date:todayKey(),stamp:fullStamp(),ts:Date.now()});save();render()}
+function editWeight(ts){const w=state.weightLogs.find(x=>x.ts===ts);if(!w)return;const next=prompt('Weight',w.weight);if(next===null)return;const stamp=prompt('Date / time',w.stamp||fullStamp());if(stamp===null)return;w.weight=Number(next)||w.weight;w.stamp=stamp.trim()||w.stamp;w.editedAt=fullStamp();save();render()}
+function deleteWeight(ts){if(!confirm('Delete this weight entry?'))return;state.weightLogs=state.weightLogs.filter(x=>x.ts!==ts);save();render()}
+function saveMeasurements(){state.measurementLogs.push({date:todayKey(),stamp:fullStamp(),ts:Date.now(),chest:val('mChest'),waist:val('mWaist'),hips:val('mHips'),arms:val('mArms'),legs:val('mLegs')});save();render()}
+function editMeasurement(ts){const m=state.measurementLogs.find(x=>x.ts===ts);if(!m)return;const stamp=prompt('Date / time',m.stamp||fullStamp());if(stamp===null)return;m.stamp=stamp.trim()||m.stamp;const chest=prompt('Chest',m.chest||'');if(chest===null)return;const waist=prompt('Waist',m.waist||'');if(waist===null)return;const hips=prompt('Hips',m.hips||'');if(hips===null)return;const arms=prompt('Arms',m.arms||'');if(arms===null)return;const legs=prompt('Legs',m.legs||'');if(legs===null)return;Object.assign(m,{chest,waist,hips,arms,legs,editedAt:fullStamp()});save();render()}
+function deleteMeasurement(ts){if(!confirm('Delete this measurement entry?'))return;state.measurementLogs=state.measurementLogs.filter(x=>x.ts!==ts);save();render()}
+function val(id){return document.getElementById(id).value||''}
+function startTimer(sec){timerLeft=sec;timerPaused=false;document.getElementById('timer').classList.add('show');document.getElementById('pauseBtn').textContent='Pause';tickTimer();clearInterval(timerInt);timerInt=setInterval(()=>{if(!timerPaused){timerLeft--;tickTimer();if(timerLeft<=0)skipTimer()}},1000)}
+function tickTimer(){const m=Math.floor(timerLeft/60),s=timerLeft%60;document.getElementById('timerTime').textContent=`${m}:${String(s).padStart(2,'0')}`}
+function toggleTimer(){timerPaused=!timerPaused;document.getElementById('pauseBtn').textContent=timerPaused?'Resume':'Pause'}
+function skipTimer(){clearInterval(timerInt);document.getElementById('timer').classList.remove('show')}
+function escapeHtml(str=''){return String(str).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+render();
+</script>
+</body>
+</html>
